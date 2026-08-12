@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables / secrets — never commit API keys
+.env
+
+# Uploaded user files — these are runtime data, not source code
+uploaded_files/
+
+# OS junk
+.DS_Store
