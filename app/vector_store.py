@@ -25,3 +25,23 @@ def add_chunk(collection, chunk, chunk_id):
             "token_count": chunk["token_count"],
         }],
     )
+
+
+def add_chunks(collection, chunks, doc_id):
+    # Stores many embedded chunks in a single batched call, id'd by doc_id + chunk_index.
+    ids = [f"{doc_id}-{chunk['chunk_index']}" for chunk in chunks]
+    embeddings = [chunk["embedding"] for chunk in chunks]
+    documents = [chunk["text"] for chunk in chunks]
+    metadatas = [{
+        "source_filename": chunk["source_filename"],
+        "page_number": chunk["page_number"],
+        "chunk_index": chunk["chunk_index"],
+        "token_count": chunk["token_count"],
+    } for chunk in chunks]
+
+    collection.add(
+        ids=ids,
+        embeddings=embeddings,
+        documents=documents,
+        metadatas=metadatas,
+    )
