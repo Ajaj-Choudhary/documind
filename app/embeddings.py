@@ -1,15 +1,4 @@
-"""
-embeddings.py
-
-Turns chunk text into vectors using OpenAI's embedding API.
-
-Model choice: text-embedding-3-small
-- 1536 dimensions
-- Cheap and fast, strong quality-to-cost ratio for a portfolio project
-- Easy to justify in interviews: "small" model is the right call when
-  you don't have millions of documents and cost/latency matter more
-  than squeezing out the last bit of retrieval quality
-"""
+"""Embeds chunk text using OpenAI's text-embedding-3-small (1536 dimensions)."""
 
 import os
 from openai import OpenAI
@@ -21,53 +10,32 @@ _client = None
 
 
 def get_client():
-    """
-    Lazily create the OpenAI client so importing this module doesn't
-    fail just because OPENAI_API_KEY isn't set yet (e.g. during tests
-    that don't need real API calls).
-    """
+    # Lazily creates and caches the OpenAI client from the API key in the environment.
     global _client
     if _client is None:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            raise RuntimeError(
-                "OPENAI_API_KEY environment variable is not set. "
-                "Set it before calling embedding functions."
-            )
+            raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
         _client = OpenAI(api_key=api_key)
     return _client
 
 
 def embed_texts(texts):
-    """
-    Embeds a list of strings in a single API call (much more efficient
-    than one call per chunk -- fewer network round trips, and the API
-    supports batching natively).
-
-    Returns a list of vectors (list[float]), same order as input texts.
-    """
+    # Embeds a batch of strings in one API call, returned in the same order as input.
     if not texts:
         return []
 
     client = get_client()
-    response = client.embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=texts,
-    )
+    response = client.embeddings.create(model=EMBEDDING_MODEL, input=texts)
 
-    # response.data is not guaranteed to preserve input order across all
-    # client versions -- sort by the "index" field to be safe rather
-    # than assuming order, since a silently-misaligned embedding would
-    # be a very hard bug to notice later.
+    # Re-sort by index rather than trusting response order, to avoid
+    # silently misaligning an embedding with the wrong chunk.
     sorted_data = sorted(response.data, key=lambda item: item.index)
     return [item.embedding for item in sorted_data]
 
 
 def embed_chunks(chunks):
-    """
-    Takes chunk dicts from chunk_pages() and returns the same dicts
-    with an "embedding" field added to each one.
-    """
+    # Embeds each chunk's text and attaches the resulting vector to its dict.
     texts = [chunk["text"] for chunk in chunks]
     vectors = embed_texts(texts)
 

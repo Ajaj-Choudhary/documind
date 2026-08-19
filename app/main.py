@@ -1,13 +1,4 @@
-"""
-main.py
-
-FastAPI layer. Accepts an uploaded file, runs it through
-extraction -> chunking, and returns the result.
-
-Not yet included: embeddings, vector storage, auth. Those land in
-later modules and will replace the "return chunks directly" behavior
-below with "store chunks, return a doc_id."
-"""
+"""FastAPI layer: accepts an uploaded file, runs extraction and chunking."""
 
 import shutil
 import uuid
@@ -28,6 +19,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
 @app.post("/documents/upload")
 async def upload_document(file: UploadFile = File(...)):
+    # Saves the uploaded file, extracts and chunks its text, and returns the chunks.
     suffix = Path(file.filename).suffix.lower()
 
     if suffix not in ALLOWED_EXTENSIONS:
@@ -60,4 +52,5 @@ async def upload_document(file: UploadFile = File(...)):
 
 @app.get("/health")
 async def health():
+    # Simple liveness check.
     return {"status": "ok"}

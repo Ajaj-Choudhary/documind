@@ -1,19 +1,19 @@
-'''Vector store module for managing document chunks using Chroma.'''
+"""Wraps Chroma for storing and retrieving embedded document chunks."""
+
 import chromadb
 
-CHROMA_PATH = "chroma_data"  # local folder where Chroma persists its data
+CHROMA_PATH = "chroma_data"
 COLLECTION_NAME = "documind_chunks"
 
 
 def get_collection():
-    '''Get or create the Chroma collection for storing document chunks.'''
+    # Connects to the local Chroma database and returns the chunks collection.
     client = chromadb.PersistentClient(path=CHROMA_PATH)
-    collection = client.get_or_create_collection(name=COLLECTION_NAME)
-    return collection
+    return client.get_or_create_collection(name=COLLECTION_NAME)
 
 
 def add_chunk(collection, chunk, chunk_id):
-    '''Add a chunk to the Chroma collection with the given chunk_id and metadata.'''
+    # Stores a single embedded chunk with its text and metadata under a unique id.
     collection.add(
         ids=[chunk_id],
         embeddings=[chunk["embedding"]],
