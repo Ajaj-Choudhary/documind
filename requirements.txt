@@ -1,1 +1,8 @@
+chromadb
+fastapi
+openai
 pymupdf
+pytest
+python-multipart
+tiktoken
+uvicorn[standard]
