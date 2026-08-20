@@ -45,3 +45,26 @@ def add_chunks(collection, chunks, doc_id):
         documents=documents,
         metadatas=metadatas,
     )
+
+
+def query_similar_chunks(collection, query_embedding, top_k=5):
+    # Returns the top_k stored chunks most similar to the given query embedding.
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"],
+    )
+
+    chunks = []
+    for text, metadata, distance in zip(
+        results["documents"][0], results["metadatas"][0], results["distances"][0]
+    ):
+        chunks.append({
+            "text": text,
+            "source_filename": metadata["source_filename"],
+            "page_number": metadata["page_number"],
+            "chunk_index": metadata["chunk_index"],
+            "distance": distance,
+        })
+
+    return chunks
