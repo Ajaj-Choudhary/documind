@@ -1,4 +1,4 @@
-"""FastAPI layer: accepts an uploaded file, runs extraction and chunking."""
+"""FastAPI layer: accepts an uploaded file, runs extraction, chunking, embedding, and storage."""
 
 import shutil
 import uuid
@@ -8,6 +8,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 
 from app.extraction import extract_text, ExtractionError
 from app.chunking import chunk_pages
+from app.embeddings import embed_chunks
+from app.vector_store import get_collection, add_chunks
 
 app = FastAPI(title="DocuMind API")
 
@@ -16,10 +18,12 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
+collection = get_collection()
+
 
 @app.post("/documents/upload")
 async def upload_document(file: UploadFile = File(...)):
-    # Saves the uploaded file, extracts and chunks its text, and returns the chunks.
+    # Saves the uploaded file, extracts/chunks/embeds its text, and stores it in Chroma.
     suffix = Path(file.filename).suffix.lower()
 
     if suffix not in ALLOWED_EXTENSIONS:
@@ -41,12 +45,14 @@ async def upload_document(file: UploadFile = File(...)):
         saved_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(e))
 
+    chunks = embed_chunks(chunks)
+    add_chunks(collection, chunks, doc_id=doc_id)
+
     return {
         "doc_id": doc_id,
         "filename": file.filename,
         "page_count": len(pages),
         "chunk_count": len(chunks),
-        "chunks": chunks,
     }
 
 
