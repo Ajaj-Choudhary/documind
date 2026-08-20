@@ -1,8 +1,8 @@
 chromadb
 fastapi
-openai
 pymupdf
 pytest
 python-multipart
+sentence-transformers
 tiktoken
 uvicorn[standard]

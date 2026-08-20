@@ -1,37 +1,29 @@
-"""Embeds chunk text using OpenAI's text-embedding-3-small (1536 dimensions)."""
+"""Embeds chunk text using a local sentence-transformers model (no API key or cost)."""
 
-import os
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIMENSIONS = 1536
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+EMBEDDING_DIMENSIONS = 384
 
-_client = None
+_model = None
 
 
-def get_client():
-    # Lazily creates and caches the OpenAI client from the API key in the environment.
-    global _client
-    if _client is None:
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
-        _client = OpenAI(api_key=api_key)
-    return _client
+def get_model():
+    # Lazily loads and caches the local embedding model.
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    return _model
 
 
 def embed_texts(texts):
-    # Embeds a batch of strings in one API call, returned in the same order as input.
+    # Embeds a batch of strings locally, returned in the same order as input.
     if not texts:
         return []
 
-    client = get_client()
-    response = client.embeddings.create(model=EMBEDDING_MODEL, input=texts)
-
-    # Re-sort by index rather than trusting response order, to avoid
-    # silently misaligning an embedding with the wrong chunk.
-    sorted_data = sorted(response.data, key=lambda item: item.index)
-    return [item.embedding for item in sorted_data]
+    model = get_model()
+    vectors = model.encode(texts, convert_to_numpy=True)
+    return [vector.tolist() for vector in vectors]
 
 
 def embed_chunks(chunks):
