@@ -10,6 +10,7 @@ from app.extraction import extract_text, ExtractionError
 from app.chunking import chunk_pages
 from app.embeddings import embed_chunks
 from app.vector_store import get_collection, add_chunks
+from app.retrieval import retrieve_relevant_chunks
 
 app = FastAPI(title="DocuMind API")
 
@@ -54,6 +55,13 @@ async def upload_document(file: UploadFile = File(...)):
         "page_count": len(pages),
         "chunk_count": len(chunks),
     }
+
+
+@app.post("/documents/ask")
+async def ask_question(question: str):
+    # Retrieves the most relevant stored chunks for a question, no answer generation yet.
+    chunks = retrieve_relevant_chunks(collection, question, top_k=5)
+    return {"question": question, "chunks": chunks}
 
 
 @app.get("/health")
