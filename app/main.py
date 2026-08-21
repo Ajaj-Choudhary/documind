@@ -11,6 +11,7 @@ from app.chunking import chunk_pages
 from app.embeddings import embed_chunks
 from app.vector_store import get_collection, add_chunks
 from app.retrieval import retrieve_relevant_chunks
+from app.generation import generate_answer
 
 app = FastAPI(title="DocuMind API")
 
@@ -59,9 +60,10 @@ async def upload_document(file: UploadFile = File(...)):
 
 @app.post("/documents/ask")
 async def ask_question(question: str):
-    # Retrieves the most relevant stored chunks for a question, no answer generation yet.
+    # Retrieves relevant chunks and asks Claude to generate a grounded, cited answer.
     chunks = retrieve_relevant_chunks(collection, question, top_k=5)
-    return {"question": question, "chunks": chunks}
+    answer = generate_answer(question, chunks)
+    return {"question": question, "answer": answer, "sources": chunks}
 
 
 @app.get("/health")
