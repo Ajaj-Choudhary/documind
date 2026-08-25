@@ -13,3 +13,7 @@ uploaded_files/
 # OS junk
 .DS_Store
 chroma_data/
+
+# Node
+frontend/node_modules/
+frontend/dist/

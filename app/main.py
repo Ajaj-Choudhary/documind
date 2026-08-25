@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.extraction import extract_text, ExtractionError
 from app.chunking import chunk_pages
@@ -14,6 +15,14 @@ from app.retrieval import retrieve_relevant_chunks
 from app.generation import generate_answer
 
 app = FastAPI(title="DocuMind API")
+
+# Allows the local React dev server (different port) to call this API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_DIR = Path("uploaded_files")
 UPLOAD_DIR.mkdir(exist_ok=True)
